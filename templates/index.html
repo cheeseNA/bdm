@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Timer</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+    crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <h1>Time</h1>
+  <input type="time" name="time">
+  <button onclick=send_ajax()>set</button>
+  <script>
+    function send_ajax() {
+      $.ajax("{{ url_for('set_time') }}", {
+        type: "POST",
+        data: { time: $("input[name='time']").val() },
+        dataType: "json"
+      }).done(function (data) {
+        console.log('ajax success');
+        console.log(data);
+      }).fail(function (data) {
+        console.log('ajax fail');
+      });
+    };
+  </script>
+</body>
+
+</html>
