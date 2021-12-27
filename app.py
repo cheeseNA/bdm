@@ -2,14 +2,10 @@ import atexit
 
 from flask import Flask, render_template, request, jsonify
 from apscheduler.schedulers.background import BackgroundScheduler
-
-
-def print_test():
-    print('triggered')
-
+from alarm import alarm
 
 scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
-scheduler.add_job(func=print_test, trigger='interval', seconds=10)
+job = scheduler.add_job(func=alarm, trigger='cron', hour=7, minute=30)
 scheduler.start()
 
 atexit.register(lambda: scheduler.shutdown())
@@ -29,9 +25,7 @@ def set_time():
     hour = int(time[:2])
     minute = int(time[3:])
     print(hour, minute)
-    print(scheduler.get_jobs())
-    job_id = scheduler.get_jobs()[0].id
-    scheduler.reschedule_job(job_id=job_id, trigger='interval', seconds=minute)
+    job.reschedule(trigger='cron', hour=hour, minute=minute)
     return jsonify({'status': 'success'})
 
 
