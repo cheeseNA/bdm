@@ -5,7 +5,17 @@ from time import sleep
 import numpy as np
 import cv2
 from picamera import PiCamera
+import RPi.GPIO as GPIO
 from google.cloud import vision
+
+x_servo_pin = 17
+y_servo_pin = 27
+
+# ratio_to_degree: camera angle of view / 2
+ratio_to_degree = 60
+controlable_angle = 140
+min_duty = 2.5
+max_duty = 12
 
 
 def alarm():
@@ -25,9 +35,20 @@ def alarm():
         print('face not detected')
         return
 
+    width = faces[0]['width']
+    height = faces[0]['height']
     target_x = (faces[0]['left_x'] + faces[0]['right_x']) // 2
     target_y = (faces[0]['up_y'] + faces[0]['down_y']) // 2
     print(f'target: ({target_x}, {target_y})')
+    print(f'(width, height): ({width}, {height})')
+
+    GPIO.setmode(GPIO.BCM)
+
+    print('aiming')
+    aim_face(width, height, target_x, target_y)
+    print('aiming done')
+
+    GPIO.cleanup()
 
 
 def face_detect():
@@ -101,11 +122,43 @@ def face_detect():
             'right_x': pt2[0],
             'up_y': pt1[1],
             'down_y': pt2[1],
+            'width': cv2image.shape[1],
+            'height': cv2image.shape[0],
             'confidence': face.detection_confidence
         })
 
     cv2.imwrite('vision.jpg', cv2image)
     return sorted(face_boundings, key=lambda x: x['confidence'], reverse=True)
+
+
+def aim_face(width, height, target_x, target_y):
+    # -1.0 to 1.0
+    ratio_x = (target_x - width / 2) / (width / 2)
+    ratio_y = (target_y - height / 2) / (height / 2)
+
+    GPIO.setup(x_servo_pin, GPIO.OUT)
+    GPIO.setup(y_servo_pin, GPIO.OUT)
+    x_servo = GPIO.PWM(x_servo_pin, 50)
+    y_servo = GPIO.PWM(y_servo_pin, 50)
+
+    def degree_to_duty(x):
+        return (min_duty + max_duty) / 2 + \
+            (max_duty - min_duty) * x / controlable_angle
+
+    x_servo.start(0.0)
+    y_servo.start(0.0)
+    print(f'control x_servo to {ratio_x}')
+    sleep(0.2)
+    x_servo.ChangeDutyCycle(degree_to_duty(ratio_x * ratio_to_degree))
+    sleep(1.0)
+    x_servo.ChangeDutyCycle(0.0)
+    print(f'control y_servo to {ratio_y}')
+    y_servo.ChangeDutyCycle(degree_to_duty(ratio_y * ratio_to_degree))
+    sleep(1.0)
+    y_servo.ChangeDutyCycle(0.0)
+    sleep(0.2)
+    x_servo.stop()
+    y_servo.stop()
 
 
 if __name__ == '__main__':
