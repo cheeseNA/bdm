@@ -1,6 +1,6 @@
 import simpleaudio
 from io import BytesIO
-from time import sleep
+from time import sleep, time
 
 import numpy as np
 import cv2
@@ -8,14 +8,20 @@ from picamera import PiCamera
 import RPi.GPIO as GPIO
 from google.cloud import vision
 
+# constants for aim_face
 x_servo_pin = 17
 y_servo_pin = 27
-
 # ratio_to_degree: camera angle of view / 2
 ratio_to_degree = 60
 controlable_angle = 140
 min_duty = 2.5
 max_duty = 12
+
+# constants for fire
+valve_pin = 18
+button_pin = 23
+valve_open_sec = 2.0
+valve_close_sec = 1.0
 
 
 def alarm():
@@ -47,6 +53,10 @@ def alarm():
     print('aiming')
     aim_face(width, height, target_x, target_y)
     print('aiming done')
+
+    print('firing')
+    fire()
+    print('firing done')
 
     GPIO.cleanup()
 
@@ -159,6 +169,27 @@ def aim_face(width, height, target_x, target_y):
     sleep(0.2)
     x_servo.stop()
     y_servo.stop()
+
+
+def fire():
+    GPIO.setup(valve_pin, GPIO.OUT)
+    GPIO.setup(button_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    def listening_while_sleep(sleep_time):
+        start_time = time()
+        while True:
+            if time() - start_time > sleep_time:
+                return False
+            if not GPIO.input(button_pin):
+                return True
+
+    while True:
+        GPIO.output(valve_pin, 1)
+        if listening_while_sleep(valve_open_sec):
+            break
+        GPIO.output(valve_pin, 0)
+        if listening_while_sleep(valve_close_sec):
+            break
 
 
 if __name__ == '__main__':
