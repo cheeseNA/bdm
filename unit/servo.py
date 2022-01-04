@@ -17,9 +17,10 @@ yservo.start(0.0)
 
 try:
     while True:
-        high = float(input('servo duty ratio: '))
-        xservo.ChangeDutyCycle(high)
-        yservo.ChangeDutyCycle(high)
+        comma_separated_duty = input('servo duty ratio: ')
+        xservo_duty, yservo_duty = map(float, comma_separated_duty.split(' '))
+        xservo.ChangeDutyCycle(xservo_duty)
+        yservo.ChangeDutyCycle(yservo_duty)
         time.sleep(0.5)
         xservo.ChangeDutyCycle(0.0)
         yservo.ChangeDutyCycle(0.0)
