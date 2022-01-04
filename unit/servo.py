@@ -1,23 +1,30 @@
 import RPi.GPIO as GPIO
 import time
 
-pin = 17
+xpin = 17
+ypin = 27
 
 GPIO.setmode(GPIO.BCM)
 
-GPIO.setup(pin, GPIO.OUT)
+GPIO.setup(xpin, GPIO.OUT)
+GPIO.setup(ypin, GPIO.OUT)
 print('setup')
 
-servo = GPIO.PWM(pin, 50)
-servo.start(0.0)
+xservo = GPIO.PWM(xpin, 50)
+xservo.start(0.0)
+yservo = GPIO.PWM(ypin, 50)
+yservo.start(0.0)
 
 try:
     while True:
         high = float(input('servo duty ratio: '))
-        servo.ChangeDutyCycle(high)
+        xservo.ChangeDutyCycle(high)
+        yservo.ChangeDutyCycle(high)
         time.sleep(0.5)
-        servo.ChangeDutyCycle(0.0)
+        xservo.ChangeDutyCycle(0.0)
+        yservo.ChangeDutyCycle(0.0)
 finally:
-    servo.stop()
+    xservo.stop()
+    yservo.stop()
     print('cleanup')
     GPIO.cleanup()
