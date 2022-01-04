@@ -1,31 +1,43 @@
 <!DOCTYPE html>
 <html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Alarm</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+      crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-<head>
-  <meta charset="UTF-8">
-  <title>Timer</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
-    crossorigin="anonymous"></script>
-</head>
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='signin.css') }}" rel="stylesheet">
+  </head>
 
-<body>
-  <h1>Time</h1>
-  <input type="time" name="time">
-  <button onclick=send_ajax()>set</button>
-  <script>
-    function send_ajax() {
-      $.ajax("{{ url_for('set_time') }}", {
-        type: "POST",
-        data: { time: $("input[name='time']").val() },
-        dataType: "json"
-      }).done(function (data) {
-        console.log('ajax success');
-        console.log(data);
-      }).fail(function (data) {
-        console.log('ajax fail');
-      });
-    };
-  </script>
-</body>
+  <body class="text-center">
+    <form class="form-signin">
+      <h1 class="h3 mb-3 font-weight-normal">Set alarm time</h1>
+      <input id="time" class="form-control" type="time" name="time" required>
+      <button class="btn btn-lg btn-primary btn-block" onclick=send_ajax() type="button">Set</button>
+    </form>
 
+    <!-- Ajax post script -->
+    <script>
+      function send_ajax() {
+        if(!(document.querySelector('#time').value)){
+          console.log('value is empty');
+          return;
+        }
+        $.ajax("{{ url_for('set_time') }}", {
+          type: "POST",
+          data: { time: $("input[name='time']").val() },
+          dataType: "json"
+        }).done(function (data) {
+          console.log('ajax success');
+          console.log(data);
+        }).fail(function (data) {
+          console.log('ajax fail');
+        });
+      };
+    </script>
+  </body>
 </html>
