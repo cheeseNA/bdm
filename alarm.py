@@ -1,6 +1,7 @@
 import simpleaudio
 from io import BytesIO
 from time import sleep, time
+import math
 
 import numpy as np
 import cv2
@@ -20,7 +21,7 @@ max_duty = 10.7
 # constants for fire
 valve_pin = 15
 button_pin = 23
-valve_open_sec = 2.0
+valve_open_sec = 1.0
 valve_close_sec = 1.0
 
 
@@ -154,19 +155,19 @@ def aim_face(width, height, target_x, target_y):
 
     def degree_to_duty(x):
         return (min_duty + max_duty) / 2 + \
-            (max_duty - min_duty) * x / controlable_angle
+            (max_duty - min_duty) * x / (math.pi / 2)
 
     x_servo.start(0.0)
     y_servo.start(0.0)
     print(f'control x_servo to {ratio_x}')
-    print(f'x_servo duty {degree_to_duty(ratio_x * ratio_to_degree)}')
+    print(f'x_servo duty {degree_to_duty(math.asin(ratio_x))}')
     sleep(0.2)
-    x_servo.ChangeDutyCycle(degree_to_duty(ratio_x * ratio_to_degree))
+    x_servo.ChangeDutyCycle(degree_to_duty(math.asin(ratio_x)))
     sleep(1.0)
     x_servo.ChangeDutyCycle(0.0)
     print(f'control y_servo to {ratio_y}')
-    print(f'y_servo duty {degree_to_duty(ratio_y * ratio_to_degree)}')
-    y_servo.ChangeDutyCycle(degree_to_duty(ratio_y * ratio_to_degree))
+    print(f'y_servo duty {degree_to_duty(math.asin(ratio_y))}')
+    y_servo.ChangeDutyCycle(degree_to_duty(math.asin(ratio_y)))
     sleep(1.0)
     y_servo.ChangeDutyCycle(0.0)
     sleep(0.2)
