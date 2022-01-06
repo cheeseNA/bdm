@@ -9,16 +9,16 @@ import RPi.GPIO as GPIO
 from google.cloud import vision
 
 # constants for aim_face
-x_servo_pin = 17
-y_servo_pin = 27
+x_servo_pin = 27
+y_servo_pin = 17
 # ratio_to_degree: camera angle of view / 2
-ratio_to_degree = 60
-controlable_angle = 140
-min_duty = 2.5
-max_duty = 12
+ratio_to_degree = 130
+controlable_angle = 70
+min_duty = 3.7
+max_duty = 10.7
 
 # constants for fire
-valve_pin = 18
+valve_pin = 15
 button_pin = 23
 valve_open_sec = 2.0
 valve_close_sec = 1.0
@@ -26,13 +26,6 @@ valve_close_sec = 1.0
 
 def alarm():
     print('alarm')
-    wave_obj = simpleaudio.WaveObject.from_wave_file(
-        '/usr/share/sounds/alsa/Front_Center.wav')
-    play_obj = wave_obj.play()
-    print('playing')
-    play_obj.wait_done()
-    print('playing done')
-
     print('detecting faces')
     faces = face_detect()
     print('detecting faces done')
@@ -48,6 +41,12 @@ def alarm():
     print(f'target: ({target_x}, {target_y})')
     print(f'(width, height): ({width}, {height})')
 
+    wave_obj = simpleaudio.WaveObject.from_wave_file('yukumo.wav')
+    play_obj = wave_obj.play()
+    print('playing')
+    play_obj.wait_done()
+    print('playing done')
+
     GPIO.setmode(GPIO.BCM)
 
     print('aiming')
@@ -59,6 +58,7 @@ def alarm():
     print('firing done')
 
     GPIO.cleanup()
+    return
 
 
 def face_detect():
@@ -72,6 +72,7 @@ def face_detect():
     sleep(2)
     camera.capture(content, 'jpeg')
     print('capturing finished')
+    camera.close()
 
     # create cv2 image object to draw boxes on
     content.seek(0)
@@ -143,8 +144,8 @@ def face_detect():
 
 def aim_face(width, height, target_x, target_y):
     # -1.0 to 1.0
-    ratio_x = (target_x - width / 2) / (width / 2)
-    ratio_y = (target_y - height / 2) / (height / 2)
+    ratio_x = -1.0 * (target_x - width / 2) / (max(width, height) / 2)
+    ratio_y = (target_y - height / 2) / (max(width, height) / 2)
 
     GPIO.setup(x_servo_pin, GPIO.OUT)
     GPIO.setup(y_servo_pin, GPIO.OUT)
@@ -158,11 +159,13 @@ def aim_face(width, height, target_x, target_y):
     x_servo.start(0.0)
     y_servo.start(0.0)
     print(f'control x_servo to {ratio_x}')
+    print(f'x_servo duty {degree_to_duty(ratio_x * ratio_to_degree)}')
     sleep(0.2)
     x_servo.ChangeDutyCycle(degree_to_duty(ratio_x * ratio_to_degree))
     sleep(1.0)
     x_servo.ChangeDutyCycle(0.0)
     print(f'control y_servo to {ratio_y}')
+    print(f'y_servo duty {degree_to_duty(ratio_y * ratio_to_degree)}')
     y_servo.ChangeDutyCycle(degree_to_duty(ratio_y * ratio_to_degree))
     sleep(1.0)
     y_servo.ChangeDutyCycle(0.0)
